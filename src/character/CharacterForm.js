@@ -2,9 +2,16 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './CharacterForm.css'; // Import the CSS file
 import { useNavigate } from 'react-router-dom';
-import {Button, Container, Typography} from "@mui/material";
+import {
+  Button,
+  Container,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography
+} from "@mui/material";
 import { Grid, IconButton } from '@mui/material';
 import { Add, Remove } from '@mui/icons-material';
+import {getTranslatedName} from '../util/TranslateUtil'
 
 
 function CharacterForm() {
@@ -19,9 +26,13 @@ function CharacterForm() {
     intelligence: 8,
     wisdom: 8,
     charisma: 8,
+    selectedSkills: []
   });
   const totalPoints = 27;
   const [remainingPoints, setRemainingPoints] = useState(totalPoints);
+  const [classSkills, setClassSkills] = useState([]); // To store the skills fetched from API
+  const [skillLimit, setSkillLimit] = useState(0);
+  const [remainingSkills, setRemainingSkills] = useState(0);
 
   const navigate = useNavigate();
   const getPointCost = (statValue) => {
@@ -38,17 +49,6 @@ function CharacterForm() {
     }
   };
 
-  const getTranslatedName = (statValue) => {
-    switch (statValue) {
-      case 'strength': return 'сила';
-      case 'dexterity': return 'спринтість';
-      case 'constitution': return 'витривалість';
-      case 'intelligence': return 'інтелект';
-      case 'wisdom': return 'мудрість';
-      case 'charisma': return 'харизма';
-      default: return 'нема'; // For values outside 8-15
-    }
-  };
 
   const calculateTotalPointsUsed = (updatedCharacter) => {
     const stats = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
@@ -59,10 +59,24 @@ function CharacterForm() {
     return totalPointsUsed;
   };
 
-  const handleChange = (e) => {
-    console.log(e.target.value)
-    console.log(e.target.name)
-    setCharacter({ ...character, [e.target.name]: e.target.value });
+  const handleChange = async (e) => {
+    const { name, value } = e.target;
+    console.log(name + ' ' + value)
+    setCharacter({ ...character, [name]: value });
+
+    if (name === 'characterClass' && value) {
+      try {
+        // Fetch the class skills and skill count from the API when class is selected
+        const response = await axios.get(`/api/characters/skill/${value}`);
+        const { classSkills, countOfSkills } = response.data;
+        setClassSkills(classSkills);
+        setSkillLimit(countOfSkills);
+        setRemainingSkills(countOfSkills);
+        setCharacter({ ...character,  [name]: value, selectedSkills: [] });
+      } catch (error) {
+        console.error('Error fetching class skills:', error);
+      }
+    }
   };
 
   const handleStatChange = (stat, increment) => {
@@ -86,8 +100,22 @@ function CharacterForm() {
     setRemainingPoints(totalPoints - newTotalPointsUsed);
   };
 
+  const handleSkillSelection = (event, newSelectedSkills) => {
+    if (newSelectedSkills.length <= skillLimit) {
+      setCharacter({ ...character, selectedSkills: newSelectedSkills });
+      setRemainingSkills(skillLimit - newSelectedSkills.length); // Update remaining skills
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Validation: Ensure user has selected all required skills
+    if (character.selectedSkills.length !== skillLimit) {
+      alert(`Будь ласка, оберіть ${skillLimit} навичок.`);
+      return;
+    }
+
     axios.post('/api/characters', character)
       .then(response => {
         console.log(response.data);
@@ -182,6 +210,51 @@ function CharacterForm() {
           />
         </div>
 
+        {/* ToggleButtonGroup for Skills (Visible only when class is selected) */}
+        {classSkills.length > 0 && (
+          <div>
+            <label className="form-label">Виберіть навички</label>
+            <Grid container spacing={2} style={{ marginTop: '10px' }}>
+              {classSkills.map((skill, index) => (
+                <Grid item xs={4} key={skill}>
+                  <ToggleButton
+                    value={skill}
+                    selected={character.selectedSkills.includes(skill)}
+                    onChange={() => handleSkillSelection(null, character.selectedSkills.includes(skill)
+                      ? character.selectedSkills.filter((s) => s !== skill)
+                      : [...character.selectedSkills, skill]
+                    )}
+                    sx={{
+                      borderRadius: '10px',
+                      width: '100%',
+                      padding: '10px',
+                      backgroundColor: character.selectedSkills.includes(skill) ? '#4caf50' : '', // Green background when selected
+                      color: character.selectedSkills.includes(skill) ? '#fff' : '#000', // White text when selected
+                      '&:hover': {
+                        backgroundColor: character.selectedSkills.includes(skill) ? '#45a049' : '#ddd', // Slightly darker green on hover when selected
+                        color: character.selectedSkills.includes(skill) ? '#fff' : '#000',
+                      },
+                      '&.Mui-selected': {
+                        backgroundColor: '#4caf50', // Green when selected
+                        color: '#fff', // White text when selected
+                      },
+                      '&.Mui-selected:hover': {
+                        backgroundColor: '#45a049', // Darker green when selected and hovered
+                        color: '#fff',
+                      }
+                    }}
+                  >
+                    {getTranslatedName(skill.toLowerCase())}
+                  </ToggleButton>
+                </Grid>
+              ))}
+            </Grid>
+            <Typography variant="body2" style={{ marginTop: '10px' }}>
+              Залишилось вибрати навичок: {remainingSkills}
+            </Typography>
+          </div>
+        )}
+
         {/* Input fields for stats */}
         <div>
           {/* Display Remaining Points */}
@@ -234,7 +307,7 @@ function CharacterForm() {
           color="primary"
           fullWidth
           sx={{ marginTop: 3 }}
-          disabled={remainingPoints !== 0}
+          disabled={remainingPoints !== 0 && remainingSkills !== 0}
         >
           Зберегти персонажа
         </Button>
