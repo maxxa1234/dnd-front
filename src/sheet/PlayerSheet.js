@@ -18,7 +18,7 @@ function PlayerSheet() {
     // Fetch both character and skills at the same time
     Promise.all([
       axios.get(`/api/characters/${id}`),
-      axios.get(`/api/characters/skills/${id}`),
+      axios.get(`/api/characters/skills/modifiers/calculate/${id}`),
     ])
       .then(([characterResponse, skillsResponse]) => {
         setCharacter(characterResponse.data); // Set character data

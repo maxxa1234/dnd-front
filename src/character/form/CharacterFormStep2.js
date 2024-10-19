@@ -11,15 +11,15 @@ const CharacterFormStep2 = ({ character, handleChange }) => {
         className="form-select"
       >
         <option value="">Оберіть расу</option>
-        <option value="Human">Людина</option>
-        <option value="Elf">Ельф</option>
-        <option value="Dwarf">Дварф</option>
-        <option value="Halfling">Напіврослик</option>
-        <option value="Gnome">Гном</option>
-        <option value="Half-Elf">Напівельф</option>
-        <option value="Half-Orc">Напіворк</option>
-        <option value="Tiefling">Тіфлінг</option>
-        <option value="Dragonborn">Драконороджений</option>
+        <option value="HUMAN">Людина</option>
+        <option value="ELF">Ельф</option>
+        <option value="DWARF">Дварф</option>
+        <option value="HALFLING">Напіврослик</option>
+        <option value="GNOME">Гном</option>
+        <option value="HALF-ELF">Напівельф</option>
+        <option value="HALF-ORC">Напіворк</option>
+        <option value="TIEFLING">Тіфлінг</option>
+        <option value="DRAGONBORN">Драконороджений</option>
       </select>
     </div>
   );

@@ -4,7 +4,7 @@ import axios from 'axios';
 export const getClassSkills = async (className) => {
   try {
     // Sending a GET request to the API with the class name as a parameter
-    const response = await axios.get(`/api/characters/skills/mastery/${className}`);
+    const response = await axios.get(`/api/skills/${className}`);
 
     // Return the data received from the API
     return response.data;
