@@ -57,7 +57,7 @@ function CharacterForm() {
     if (name === 'characterClass' && value) {
       try {
         // Fetch the class skills and skill count from the API when class is selected
-        const response = await axios.get(`/api/characters/skill/${value}`);
+        const response = await axios.get(`/api/characters/skills/mastery/${value}`);
         const { classSkills, countOfSkills, allAvailableSkills } = response.data;
         setClassSkills(classSkills);
         setSkillLimit(countOfSkills);
